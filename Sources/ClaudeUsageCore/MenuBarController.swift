@@ -46,12 +46,15 @@ public final class MenuBarController: NSObject {
 
     /// Met à jour la barre et le menu avec des données fraîches.
     private func apply(_ snapshot: UsageSnapshot) {
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.menuBarFont(ofSize: 0)
+        ]
+        if let color = UsageFormatter.statusColor(for: snapshot) {
+            attributes[.foregroundColor] = color
+        }
         statusItem.button?.attributedTitle = NSAttributedString(
             string: UsageFormatter.statusText(for: snapshot),
-            attributes: [
-                .foregroundColor: UsageFormatter.statusColor(for: snapshot),
-                .font: NSFont.menuBarFont(ofSize: 0),
-            ]
+            attributes: attributes
         )
         let menu = makeMenu()
         appendLimit(to: menu, title: "Limite 5 h", limit: snapshot.fiveHour)
