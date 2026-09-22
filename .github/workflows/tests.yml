@@ -1,0 +1,17 @@
+name: Tests
+
+# Tourne sur chaque pull request. Un runner macOS est nécessaire : les
+# vérifications touchent AppKit. La fabrication du bundle reste dans le
+# workflow de release.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lancer les vérifications
+        run: swift run --build-system native ClaudeUsageChecks
