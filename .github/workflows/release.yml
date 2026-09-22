@@ -1,0 +1,56 @@
+name: Release
+
+# Un tag v1.2.0 construit ClaudeUsage-1.2.0.zip sur un runner macOS et
+# l'attache à la release GitHub. Un lancement manuel produit la même archive
+# sous forme d'artefact téléchargeable, pour essayer une version avant de la
+# taguer.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lancer les vérifications
+        run: swift run --build-system native ClaudeUsageChecks
+
+      - name: Résoudre la version
+        id: version
+        run: |
+          file=$(sed -n 's/^public let appVersion = "\(.*\)"$/\1/p' Sources/ClaudeUsageCore/Version.swift)
+          if [ -z "$file" ]; then
+            echo "Version introuvable dans Sources/ClaudeUsageCore/Version.swift" >&2
+            exit 1
+          fi
+          if [ "${GITHUB_REF}" != "${GITHUB_REF#refs/tags/}" ]; then
+            tag="${GITHUB_REF_NAME#v}"
+            if [ "$tag" != "$file" ]; then
+              echo "Le tag $tag ne correspond pas à Version.swift ($file)" >&2
+              exit 1
+            fi
+          fi
+          echo "value=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Construire l'archive
+        run: ./build.sh --zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          # Le numéro de lancement distingue les constructions successives.
+          name: ClaudeUsage-${{ steps.version.outputs.value }}-build${{ github.run_number }}
+          path: build/ClaudeUsage-*.zip
+
+      - name: Publier la release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/ClaudeUsage-*.zip
+          generate_release_notes: true
