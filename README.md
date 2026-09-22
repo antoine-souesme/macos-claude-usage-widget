@@ -15,10 +15,23 @@ remise à zéro, et propose de rafraîchir ou de quitter.
 
 ## Installation
 
+Depuis la page des releases, télécharger `ClaudeUsage-X.Y.Z.zip`, le
+décompresser et glisser `ClaudeUsage.app` dans `/Applications`.
+
+L'application n'est pas notarisée par Apple, faute de compte
+développeur. Au premier lancement, macOS refuse donc de l'ouvrir. Il
+faut faire un clic droit sur l'application, choisir « Ouvrir », puis
+confirmer ; ce n'est à faire qu'une fois. Si l'avertissement persiste :
+
+    xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
+
+Pour construire soi-même depuis les sources :
+
     ./build.sh --install
 
-L'application arrive dans `/Applications`. Sans `--install`, le bundle
-reste dans `build/`.
+L'application arrive dans `/Applications`. Sans argument, le bundle
+reste dans `build/` ; avec `--zip`, le script produit en plus l'archive
+distribuée dans les releases.
 
 Au premier lancement, macOS demande l'autorisation d'accéder au
 trousseau : il faut l'accorder pour que l'application puisse lire la
@@ -50,6 +63,11 @@ Le drapeau `--build-system native` est nécessaire tant qu'Xcode n'est
 pas installé : sans lui, le moteur de compilation par défaut de Swift
 6.4 refuse de démarrer.
 
+Le numéro de version vit uniquement dans
+`Sources/ClaudeUsageCore/Version.swift` ; `build.sh` le recopie dans
+l'`Info.plist` du bundle, et le workflow de release vérifie que le tag
+poussé lui correspond.
+
 Pour la même raison, les tests n'utilisent ni XCTest ni Swift Testing,
 absents des seuls outils en ligne de commande. Ils prennent la forme
 d'un petit exécutable de vérification, `ClaudeUsageChecks`, qui renvoie
@@ -62,6 +80,13 @@ un code d'erreur si un cas échoue.
   de l'affichage et contrôleur de la barre de menus.
 - `Sources/ClaudeUsage` : le point d'entrée de l'application.
 - `Sources/ClaudeUsageChecks` : les vérifications automatiques.
+
+### Publier une version
+
+Demander à Claude Code de publier la version voulue : la skill
+`release` fusionne `develop` dans `main`, met le numéro à jour, pose le
+tag et pousse le tout. GitHub Actions construit alors l'archive et
+l'attache à la release.
 
 Le code et les noms sont en anglais, les commentaires et la
 documentation en français.
