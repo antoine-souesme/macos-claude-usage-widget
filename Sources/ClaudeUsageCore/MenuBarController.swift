@@ -1,4 +1,5 @@
 import AppKit
+import Foundation
 
 /// Gère l'élément de barre de menus : affichage, menu déroulant et rafraîchissement.
 @MainActor
@@ -11,6 +12,10 @@ public final class MenuBarController: NSObject {
     private let statusItem: NSStatusItem
     private var timer: Timer?
     private var refreshTask: Task<Void, Never>?
+    /// Décide de l'attente à observer quand l'API refuse les requêtes.
+    private var retryPolicy = RetryPolicy()
+    /// Instant avant lequel aucune requête ne doit partir, pendant un ralentissement.
+    private var nextAllowedFetch: Date?
 
     public init(client: UsageFetching) {
         self.client = client
@@ -29,13 +34,26 @@ public final class MenuBarController: NSObject {
     }
 
     /// Lance une récupération, en annulant celle qui serait encore en cours.
+    ///
+    /// Pendant un ralentissement, la requête est retenue : insister ne ferait
+    /// que prolonger le refus du serveur.
     private func refresh() {
+        if let nextAllowedFetch, Date() < nextAllowedFetch {
+            showRateLimit(retryIn: nextAllowedFetch.timeIntervalSinceNow)
+            return
+        }
         refreshTask?.cancel()
         refreshTask = Task { [weak self] in
             guard let self else { return }
             do {
                 let snapshot = try await self.client.fetch()
+                self.retryPolicy.reset()
+                self.nextAllowedFetch = nil
                 self.apply(snapshot)
+            } catch UsageError.rateLimited(let retryAfter) {
+                let delay = self.retryPolicy.delayAfterRateLimit(retryAfter: retryAfter)
+                self.nextAllowedFetch = Date().addingTimeInterval(delay)
+                self.showRateLimit(retryIn: delay)
             } catch let error as UsageError {
                 self.apply(error)
             } catch {
@@ -70,6 +88,20 @@ public final class MenuBarController: NSObject {
         }
         let menu = makeMenu()
         appendInfo(to: menu, text: UsageFormatter.message(for: error))
+        appendActions(to: menu)
+        statusItem.menu = menu
+    }
+
+    /// Explique le ralentissement en cours et le moment du prochain essai.
+    private func showRateLimit(retryIn: TimeInterval) {
+        if statusItem.button?.title.isEmpty ?? true {
+            statusItem.button?.title = UsageFormatter.placeholderText
+        }
+        let menu = makeMenu()
+        appendInfo(
+            to: menu,
+            text: UsageFormatter.message(for: .rateLimited(retryAfter: nil), retryIn: retryIn)
+        )
         appendActions(to: menu)
         statusItem.menu = menu
     }

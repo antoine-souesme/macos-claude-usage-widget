@@ -45,12 +45,21 @@ public enum UsageFormatter {
     }
 
     /// Message affiché dans le menu lorsqu'une récupération a échoué.
-    public static func message(for error: UsageError) -> String {
+    ///
+    /// `retryIn` indique l'attente restante avant le prochain essai, en secondes,
+    /// quand un ralentissement est en cours.
+    public static func message(for error: UsageError, retryIn: TimeInterval? = nil) -> String {
         switch error {
         case .credentialsNotFound:
             return "Session introuvable. Lance Claude Code puis réessaie."
         case .sessionExpired:
             return "Session expirée. Relance Claude Code pour te reconnecter."
+        case .rateLimited:
+            guard let retryIn, retryIn > 0 else {
+                return "Trop de requêtes. Nouvel essai dans un instant."
+            }
+            let minutes = max(1, Int((retryIn / 60).rounded()))
+            return "Trop de requêtes. Nouvel essai dans \(minutes) min."
         case .network(let detail):
             return "Connexion impossible (\(detail))."
         case .malformedResponse:
