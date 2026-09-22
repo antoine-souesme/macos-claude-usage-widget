@@ -55,6 +55,25 @@ func runFormatterChecks(_ runner: inout CheckRunner) {
         a.expect(UsageFormatter.message(for: .sessionExpired).contains("Claude Code"), "session expirée")
         a.expect(!UsageFormatter.message(for: .network("timeout")).isEmpty, "réseau")
         a.expect(!UsageFormatter.message(for: .malformedResponse).isEmpty, "réponse illisible")
+        a.expect(UsageFormatter.message(for: .rateLimited(retryAfter: nil)).contains("Trop de requêtes"), "limite de requêtes")
+    }
+
+    runner.check("le message de limite annonce le délai avant le prochain essai") { a in
+        a.expectEqual(
+            UsageFormatter.message(for: .rateLimited(retryAfter: 120), retryIn: 120),
+            "Trop de requêtes. Nouvel essai dans 2 min."
+        )
+        a.expectEqual(
+            UsageFormatter.message(for: .rateLimited(retryAfter: 45), retryIn: 45),
+            "Trop de requêtes. Nouvel essai dans 1 min."
+        )
+    }
+
+    runner.check("sans délai connu le message reste vague") { a in
+        a.expectEqual(
+            UsageFormatter.message(for: .rateLimited(retryAfter: nil)),
+            "Trop de requêtes. Nouvel essai dans un instant."
+        )
     }
 
     runner.check("le texte de repli est une ellipse") { a in

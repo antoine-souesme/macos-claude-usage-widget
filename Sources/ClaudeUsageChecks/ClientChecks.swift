@@ -15,6 +15,7 @@ private struct StubCredentials: CredentialProviding {
 private final class StubTransport: HTTPTransporting, @unchecked Sendable {
     var statusCode = 200
     var body = Data()
+    var headers: [String: String] = [:]
     var thrownError: Error?
     private(set) var lastRequest: URLRequest?
 
@@ -22,7 +23,7 @@ private final class StubTransport: HTTPTransporting, @unchecked Sendable {
         lastRequest = request
         if let thrownError { throw thrownError }
         let response = HTTPURLResponse(
-            url: request.url!, statusCode: statusCode, httpVersion: nil, headerFields: nil
+            url: request.url!, statusCode: statusCode, httpVersion: nil, headerFields: headers
         )!
         return (body, response)
     }
@@ -75,6 +76,29 @@ func runClientChecks(_ runner: inout CheckRunner) async {
         transport.statusCode = 500
         let client = APIUsageClient(credentials: StubCredentials(), transport: transport)
         await a.expectThrowsAsync(UsageError.network("code 500")) { _ = try await client.fetch() }
+    }
+
+    await runner.checkAsync("un code 429 signale une limite de requêtes") { a in
+        let transport = StubTransport()
+        transport.statusCode = 429
+        let client = APIUsageClient(credentials: StubCredentials(), transport: transport)
+        await a.expectThrowsAsync(UsageError.rateLimited(retryAfter: nil)) { _ = try await client.fetch() }
+    }
+
+    await runner.checkAsync("l'en-tête Retry-After en secondes est repris") { a in
+        let transport = StubTransport()
+        transport.statusCode = 429
+        transport.headers = ["Retry-After": "120"]
+        let client = APIUsageClient(credentials: StubCredentials(), transport: transport)
+        await a.expectThrowsAsync(UsageError.rateLimited(retryAfter: 120)) { _ = try await client.fetch() }
+    }
+
+    await runner.checkAsync("un Retry-After illisible est ignoré") { a in
+        let transport = StubTransport()
+        transport.statusCode = 429
+        transport.headers = ["Retry-After": "bientôt"]
+        let client = APIUsageClient(credentials: StubCredentials(), transport: transport)
+        await a.expectThrowsAsync(UsageError.rateLimited(retryAfter: nil)) { _ = try await client.fetch() }
     }
 
     await runner.checkAsync("une panne de transport devient une erreur réseau") { a in
