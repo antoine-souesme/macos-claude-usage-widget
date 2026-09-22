@@ -8,6 +8,7 @@ func runAllChecks() async -> Never {
     runModelChecks(&runner)
     runDecoderChecks(&runner)
     runFormatterChecks(&runner)
+    runBackoffChecks(&runner)
     runCredentialChecks(&runner)
     await runClientChecks(&runner)
     runner.finish()

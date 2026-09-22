@@ -34,6 +34,9 @@ public enum UsageError: Error, Equatable, Sendable {
     case sessionExpired
     /// La requête réseau a échoué ; le texte décrit la cause.
     case network(String)
+    /// L'API refuse temporairement les requêtes, trop nombreuses.
+    /// `retryAfter` reprend le délai conseillé par le serveur, en secondes, s'il en donne un.
+    case rateLimited(retryAfter: TimeInterval?)
     /// La réponse de l'API n'a pas la forme attendue.
     case malformedResponse
 }

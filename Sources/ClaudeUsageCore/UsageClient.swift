@@ -65,8 +65,20 @@ public struct APIUsageClient: UsageFetching {
             return try UsageResponseDecoder.decode(data)
         case 401, 403:
             throw UsageError.sessionExpired
+        case 429:
+            throw UsageError.rateLimited(retryAfter: Self.retryDelay(from: response))
         default:
             throw UsageError.network("code \(response.statusCode)")
         }
+    }
+
+    /// Lit l'en-tête `Retry-After` quand il contient un nombre de secondes.
+    /// Toute autre forme est ignorée : le ralentissement automatique prendra le relais.
+    private static func retryDelay(from response: HTTPURLResponse) -> TimeInterval? {
+        guard let header = response.value(forHTTPHeaderField: "Retry-After"),
+              let seconds = TimeInterval(header.trimmingCharacters(in: .whitespaces)),
+              seconds > 0
+        else { return nil }
+        return seconds
     }
 }
