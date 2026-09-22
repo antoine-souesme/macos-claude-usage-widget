@@ -23,8 +23,8 @@ func runFormatterChecks(_ runner: inout CheckRunner) {
         a.expectEqual(UsageFormatter.percentText(99.9), "100%")
     }
 
-    runner.check("en dessous de 70 % la couleur reste celle du système") { a in
-        a.expectEqual(UsageFormatter.statusColor(for: makeSnapshot(fiveHour: 69, sevenDay: 0)), NSColor.labelColor)
+    runner.check("en dessous de 70 % aucune couleur n'est imposée") { a in
+        a.expectEqual(UsageFormatter.statusColor(for: makeSnapshot(fiveHour: 69, sevenDay: 0)), nil)
     }
 
     runner.check("à partir de 70 % la couleur passe à l'orange") { a in

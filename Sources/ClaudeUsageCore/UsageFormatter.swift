@@ -26,11 +26,13 @@ public enum UsageFormatter {
     }
 
     /// Couleur du texte, déterminée par la plus chargée des deux limites.
-    public static func statusColor(for snapshot: UsageSnapshot) -> NSColor {
+    /// Renvoie `nil` en dessous du seuil d'alerte : sans couleur imposée, macOS
+    /// grise lui-même le texte quand la barre de menus n'est pas celle de l'écran actif.
+    public static func statusColor(for snapshot: UsageSnapshot) -> NSColor? {
         let highest = max(snapshot.fiveHour.utilization, snapshot.sevenDay.utilization)
         if highest >= criticalThreshold { return .systemRed }
         if highest >= warningThreshold { return .systemOrange }
-        return .labelColor
+        return nil
     }
 
     /// Phrase indiquant l'heure locale de remise à zéro, ou rien si elle est inconnue.
