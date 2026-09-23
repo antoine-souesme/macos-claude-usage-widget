@@ -75,8 +75,8 @@ public final class MenuBarController: NSObject {
             attributes: attributes
         )
         let menu = makeMenu()
-        appendLimit(to: menu, title: "Limite 5 h", limit: snapshot.fiveHour)
-        appendLimit(to: menu, title: "Limite hebdomadaire", limit: snapshot.sevenDay)
+        appendLimit(to: menu, title: "5-hour limit", limit: snapshot.fiveHour)
+        appendLimit(to: menu, title: "Weekly limit", limit: snapshot.sevenDay)
         appendActions(to: menu)
         statusItem.menu = menu
     }
@@ -109,7 +109,7 @@ public final class MenuBarController: NSObject {
     /// Menu affiché avant la toute première réponse.
     private func showLoadingMenu() {
         let menu = makeMenu()
-        appendInfo(to: menu, text: "Chargement…")
+        appendInfo(to: menu, text: "Loading…")
         appendActions(to: menu)
         statusItem.menu = menu
     }
@@ -131,7 +131,7 @@ public final class MenuBarController: NSObject {
 
     /// Ajoute une limite au menu, avec sa ligne de remise à zéro si elle est connue.
     private func appendLimit(to menu: NSMenu, title: String, limit: UsageLimit) {
-        appendInfo(to: menu, text: "\(title) : \(UsageFormatter.percentText(limit.utilization))")
+        appendInfo(to: menu, text: "\(title): \(UsageFormatter.percentText(limit.utilization))")
 
         if let reset = UsageFormatter.resetText(for: limit.resetsAt) {
             let subtitle = NSMenuItem(title: reset, action: nil, keyEquivalent: "")
@@ -152,12 +152,12 @@ public final class MenuBarController: NSObject {
         menu.addItem(.separator())
 
         let refreshItem = NSMenuItem(
-            title: "Rafraîchir maintenant", action: #selector(refreshNow), keyEquivalent: "r"
+            title: "Refresh now", action: #selector(refreshNow), keyEquivalent: "r"
         )
         refreshItem.target = self
         menu.addItem(refreshItem)
 
-        let quitItem = NSMenuItem(title: "Quitter", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
