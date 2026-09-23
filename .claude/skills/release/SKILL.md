@@ -34,7 +34,7 @@ Refuser et prévenir l'utilisateur si l'une de ces conditions est vraie :
 4. Remplacer `appVersion` dans `Sources/ClaudeUsageCore/Version.swift` par `X.Y.Z`
 5. `git add Sources/ClaudeUsageCore/Version.swift && git commit -m "Version X.Y.Z"`
 6. `git tag vX.Y.Z` sur le commit de version
-7. `git push origin main --follow-tags`
+7. `git push origin main vX.Y.Z`
 8. `git checkout develop && git merge main --no-ff -m "Retour de la version X.Y.Z"`
 9. `git push origin develop`
 
