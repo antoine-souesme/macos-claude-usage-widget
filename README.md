@@ -10,8 +10,8 @@ Le premier nombre est la limite 5 heures, le second la limite
 hebdomadaire. Le texte passe en orange à partir de 70 % et en rouge à
 partir de 90 %.
 
-Un clic ouvre un menu qui détaille les deux limites avec leur heure de
-remise à zéro, et propose de rafraîchir ou de quitter.
+Un clic ouvre un menu qui détaille les deux limites avec leur date et heure de
+remise à zéro, et propose de rafraîchir ou de quitter. Les textes de l'interface sont en anglais.
 
 ## Installation
 

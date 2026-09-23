@@ -35,13 +35,32 @@ public enum UsageFormatter {
         return nil
     }
 
-    /// Phrase indiquant l'heure locale de remise à zéro, ou rien si elle est inconnue.
-    public static func resetText(for date: Date?) -> String? {
+    /// Phrase indiquant la date et l'heure locales de remise à zéro, ou rien si elles sont inconnues.
+    ///
+    /// Le jour est remplacé par « today » quand la remise à zéro a lieu aujourd'hui.
+    /// `now` et `calendar` sont paramétrables pour rendre la fonction vérifiable.
+    public static func resetText(
+        for date: Date?,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> String? {
         guard let date else { return nil }
+        let time = formatter("HH:mm", calendar: calendar).string(from: date)
+        if calendar.isDate(date, inSameDayAs: now) {
+            return "Resets today at \(time)"
+        }
+        let day = formatter("dd/MM/yyyy", calendar: calendar).string(from: date)
+        return "Resets \(day) at \(time)"
+    }
+
+    /// Formateur à motif fixe, indépendant des réglages régionaux de l'utilisateur.
+    private static func formatter(_ format: String, calendar: Calendar) -> DateFormatter {
         let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return "Réinitialisation à \(formatter.string(from: date))"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = format
+        return formatter
     }
 
     /// Message affiché dans le menu lorsqu'une récupération a échoué.
@@ -51,19 +70,19 @@ public enum UsageFormatter {
     public static func message(for error: UsageError, retryIn: TimeInterval? = nil) -> String {
         switch error {
         case .credentialsNotFound:
-            return "Session introuvable. Lance Claude Code puis réessaie."
+            return "Session not found. Launch Claude Code and try again."
         case .sessionExpired:
-            return "Session expirée. Relance Claude Code pour te reconnecter."
+            return "Session expired. Relaunch Claude Code to sign in again."
         case .rateLimited:
             guard let retryIn, retryIn > 0 else {
-                return "Trop de requêtes. Nouvel essai dans un instant."
+                return "Too many requests. Retrying shortly."
             }
             let minutes = max(1, Int((retryIn / 60).rounded()))
-            return "Trop de requêtes. Nouvel essai dans \(minutes) min."
+            return "Too many requests. Retrying in \(minutes) min."
         case .network(let detail):
-            return "Connexion impossible (\(detail))."
+            return "Unable to connect (\(detail))."
         case .malformedResponse:
-            return "Réponse inattendue du serveur."
+            return "Unexpected server response."
         }
     }
 }
