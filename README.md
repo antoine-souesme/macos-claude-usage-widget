@@ -46,7 +46,7 @@ démarrage, puis ajouter `ClaudeUsage.app`.
 
 L'application réutilise la session déjà ouverte par Claude Code : elle
 lit le jeton dans le trousseau macOS, puis interroge l'API
-d'utilisation d'Anthropic une fois par minute. Aucun identifiant n'est
+d'utilisation d'Anthropic toutes les deux minutes. Aucun identifiant n'est
 enregistré par l'application, et rien n'est écrit sur le disque.
 
 Si la barre affiche des points de suspension, ouvrir le menu : il explique ce qui ne va

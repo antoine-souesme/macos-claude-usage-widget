@@ -8,7 +8,7 @@ let application = NSApplication.shared
 application.setActivationPolicy(.accessory)
 
 let client = APIUsageClient(
-    credentials: KeychainCredentialStore(),
+    credentials: CachedCredentialStore(source: KeychainCredentialStore()),
     transport: URLSessionTransport()
 )
 let controller = MenuBarController(client: client)
