@@ -6,7 +6,7 @@ import Foundation
 public final class MenuBarController: NSObject {
 
     /// Intervalle entre deux interrogations de l'API, en secondes.
-    private static let refreshInterval: TimeInterval = 60
+    private static let refreshInterval: TimeInterval = 120
 
     private let client: UsageFetching
     private let statusItem: NSStatusItem

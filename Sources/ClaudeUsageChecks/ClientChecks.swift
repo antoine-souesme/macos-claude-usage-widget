@@ -11,6 +11,14 @@ private struct StubCredentials: CredentialProviding {
     }
 }
 
+/// Doublure qui retient si le client a demandé d'oublier le jeton.
+private final class InvalidationSpy: CredentialProviding, @unchecked Sendable {
+    private(set) var invalidated = false
+
+    func accessToken() throws -> String { "test-token" }
+    func invalidate() { invalidated = true }
+}
+
 /// Doublure de transport : retient la requête reçue et rejoue une réponse fixée.
 private final class StubTransport: HTTPTransporting, @unchecked Sendable {
     var statusCode = 200
@@ -69,6 +77,15 @@ func runClientChecks(_ runner: inout CheckRunner) async {
         transport.statusCode = 401
         let client = APIUsageClient(credentials: StubCredentials(), transport: transport)
         await a.expectThrowsAsync(UsageError.sessionExpired) { _ = try await client.fetch() }
+    }
+
+    await runner.checkAsync("un code 401 fait oublier le jeton gardé en mémoire") { a in
+        let transport = StubTransport()
+        transport.statusCode = 401
+        let credentials = InvalidationSpy()
+        let client = APIUsageClient(credentials: credentials, transport: transport)
+        _ = try? await client.fetch()
+        a.expect(credentials.invalidated, "le jeton aurait dû être oublié")
     }
 
     await runner.checkAsync("un code 500 devient une erreur réseau") { a in

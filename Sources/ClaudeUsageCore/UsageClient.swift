@@ -43,7 +43,6 @@ public struct APIUsageClient: UsageFetching {
     }
 
     public func fetch() async throws -> UsageSnapshot {
-        // Le jeton est lu à chaque appel : il n'est jamais conservé entre deux requêtes.
         let token = try credentials.accessToken()
 
         var request = URLRequest(url: Self.endpoint)
@@ -64,6 +63,8 @@ public struct APIUsageClient: UsageFetching {
         case 200...299:
             return try UsageResponseDecoder.decode(data)
         case 401, 403:
+            // Le jeton a sans doute été renouvelé par Claude Code : il sera relu au prochain essai.
+            credentials.invalidate()
             throw UsageError.sessionExpired
         case 429:
             throw UsageError.rateLimited(retryAfter: Self.retryDelay(from: response))
