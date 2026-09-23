@@ -72,7 +72,7 @@ Claude Code.
 
 ## Rafraîchissement
 
-Un `Timer` déclenche une requête toutes les 60 secondes, ainsi qu'une
+Un `Timer` déclenche une requête toutes les 120 secondes, ainsi qu'une
 fois au lancement. L'entrée « Rafraîchir maintenant » déclenche la même
 requête immédiatement. Les appels réseau sont asynchrones ; l'interface
 n'est jamais bloquée.
